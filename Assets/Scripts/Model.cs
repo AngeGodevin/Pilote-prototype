@@ -18,35 +18,46 @@ public class Model : MonoBehaviour
     List<GameObject> gameObjects;
     public List<int> distances;
     public int numberOfAngles;
+    public int duration;
+    private float currentTime;
+
     private System.Random rng = new System.Random();
 
 
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("start");
-        state = State.IDLE;
+        // state = State.IDLE;
+        state = State.EXP_ON_GOING;
         gameObjects = new List<GameObject>();
         generateTargets();
-
         Shuffle(this.gameObjects);
-        Debug.Log("end");
-
+        this.currentTime = 0;
         this.gameObjects[0].SetActive(true);
     }
 
     // Update is called once per frame
     void Update()
     {
-
-        Vector3 vec = Input.mousePosition;
-        if(Input.GetMouseButtonDown(0))
+        switch (this.state)
         {
-            Debug.Log(IsTargetHit().ToString());
-            NextTarget();
+            case State.IDLE:
+                //start the exp button
+                break;
+            case State.EXP_ON_GOING:
+                Vector3 vec = Input.mousePosition;
+                if (Input.GetMouseButtonDown(0))
+                {
+                    Debug.Log(IsTargetHit().ToString());
+                    NextTarget();
+                }
+                if (!isTimerRunning())
+                {
+                    this.state = State.IDLE;
+                    //register data
+                }
+                break;
         }
-    
-
     }
 
 
@@ -59,15 +70,24 @@ public class Model : MonoBehaviour
            }
        }*/
 
-
+    private bool isTimerRunning()
+    {
+        if (currentTime < duration)
+        {
+            currentTime += Time.deltaTime;
+            Debug.Log(currentTime.ToString());
+            return true;
+        }
+        return false;
+    }
     private void Shuffle(List<GameObject> list)
     {
         List<GameObject> temp = new List<GameObject>();
         temp.AddRange(list);
         list.Clear();
-        list.AddRange(temp.OrderBy(_ =>rng.Next()).ToList());
+        list.AddRange(temp.OrderBy(_ => rng.Next()).ToList());
 
-       // DisplayList(list);
+        // DisplayList(list);
     }
 
 
@@ -77,7 +97,7 @@ public class Model : MonoBehaviour
     {
         for (int i = 0; i < numberOfAngles; i++)
         {
-            for(int j = 0; j < distances.Count; j++)
+            for (int j = 0; j < distances.Count; j++)
             {
                 //adapt vector3 coordinates
                 double angle = ConvertDegreesToRadians(i * (360 / numberOfAngles));
@@ -88,14 +108,14 @@ public class Model : MonoBehaviour
                 //create the object, and set it inactive
                 GameObject tmp = Instantiate(shape, new Vector3(x, y, z), Quaternion.identity);
                 tmp.SetActive(false);
-                
+
                 //giving object a name, and adding it to the list of objects
-                int name = i*distances.Count+j;
+                int name = i * distances.Count + j;
                 tmp.name = name.ToString();
                 gameObjects.Add(tmp);
             }
         }
-        
+
     }
 
     void DisplayList(List<GameObject> list)
@@ -114,18 +134,19 @@ public class Model : MonoBehaviour
     // Remove last target from the scene and make the next one spawn
     void NextTarget()
     {
-        if(this.gameObjects.Count > 0) { 
-        this.gameObjects[0].SetActive(false);
-        this.gameObjects.RemoveAt(0);
-        this.gameObjects[0].SetActive(true);
-        } 
+        if (this.gameObjects.Count > 0)
+        {
+            this.gameObjects[0].SetActive(false);
+            this.gameObjects.RemoveAt(0);
+            this.gameObjects[0].SetActive(true);
+        }
     }
 
     bool IsTargetHit()
     {
         RaycastHit hit;
         Ray rayOrigin = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if(Physics.Raycast(rayOrigin, out hit))
+        if (Physics.Raycast(rayOrigin, out hit))
         {
             return true;
         }

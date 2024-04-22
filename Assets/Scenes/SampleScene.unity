@@ -325,6 +325,7 @@ MonoBehaviour:
   shape: {fileID: 7769798717540369070, guid: 07fe638845f19a44286246306ca8a50a, type: 3}
   distances: 1e00000028000000320000003c000000
   numberOfAngles: 8
+  duration: 60
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
