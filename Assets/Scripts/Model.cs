@@ -1,9 +1,9 @@
 using System;
-using System.Collections;
 
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
 public class Model : MonoBehaviour
@@ -20,7 +20,8 @@ public class Model : MonoBehaviour
     public int numberOfAngles;
     public int duration;
     private float currentTime;
-
+    private RecordData recordData;
+    private List<UserData> userData;
     private System.Random rng = new System.Random();
 
 
@@ -30,10 +31,13 @@ public class Model : MonoBehaviour
         // state = State.IDLE;
         state = State.EXP_ON_GOING;
         gameObjects = new List<GameObject>();
+        this.userData = new List<UserData>();
         generateTargets();
         Shuffle(this.gameObjects);
         this.currentTime = 0;
         this.gameObjects[0].SetActive(true);
+        this.recordData = new RecordData(duration, numberOfAngles, distances);
+
     }
 
     // Update is called once per frame
@@ -48,34 +52,25 @@ public class Model : MonoBehaviour
                 Vector3 vec = Input.mousePosition;
                 if (Input.GetMouseButtonDown(0))
                 {
-                    Debug.Log(IsTargetHit().ToString());
+           //         UserData u = new UserData { targetId= ,difficultyId=}
+           //             IsTargetHit().ToString());
                     NextTarget();
                 }
                 if (!isTimerRunning())
                 {
                     this.state = State.IDLE;
                     //register data
+                    this.registerData();
                 }
                 break;
         }
     }
-
-
-    /*   private void OnTriggerEnter(Collider other)
-       {
-           if (other.tag == "collectable")
-           {
-               Debug.Log("clicked");
-               Destroy(this.gameObject);
-           }
-       }*/
 
     private bool isTimerRunning()
     {
         if (currentTime < duration)
         {
             currentTime += Time.deltaTime;
-            Debug.Log(currentTime.ToString());
             return true;
         }
         return false;
@@ -148,6 +143,7 @@ public class Model : MonoBehaviour
         Ray rayOrigin = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(rayOrigin, out hit))
         {
+           // Debug.Log(hit.)
             return true;
         }
         return false;
@@ -157,5 +153,60 @@ public class Model : MonoBehaviour
     {
     }
 
+    //register data to Csv
+    void registerData()
+    {
+        Debug.Log("writing");
 
+        //writing the parameters of the experience 
+        TextWriter csv = new StreamWriter(Application.dataPath + "/test.csv", false);
+        csv.WriteLine("Duration, Number of angles");
+        csv.WriteLine(recordData.duration.ToString() + "," + recordData.numberOfAngles.ToString());
+        csv.WriteLine("");
+        csv.WriteLine("Distances");
+        for (int i = 0; i < recordData.listOfDistances.Count; i++)
+        {
+            csv.WriteLine(recordData.listOfDistances[i]);
+        }
+
+        csv.WriteLine("");
+        csv.WriteLine("");
+        csv.WriteLine("");
+
+        //writing the user data
+        csv.WriteLine("TargetId, DifficultyId, IsTargetHit?, HitCoordsX, HitCoordsY, HitCoordsY, HitCoordsZ, TargetCoordsX, TargetCoordsY, TargetCoordsZ, Time");
+        for (int i = 0; i < userData.Count; i++)
+        {
+            csv.WriteLine(userData[i].targetId.ToString() + "," + userData[i].difficultyId.ToString() + "," + userData[i].isTargetHit.ToString() + "," + userData[i].hitCoords.x.ToString() + "," + userData[i].hitCoords.y.ToString() + "," + userData[i].hitCoords.z.ToString() + "," + userData[i].targetCoords.x.ToString() + "," + userData[i].targetCoords.y.ToString() + "," + userData[i].targetCoords.z.ToString(), userData[i].time.ToString());
+        }
+
+
+        csv.Close();
+
+        Debug.Log("end of writing");
+    }
+
+
+}
+public class UserData
+{
+    public int targetId { get; set; }
+    public int difficultyId { get; set; }
+    public bool isTargetHit { get; set; }
+    public Vector3 hitCoords { get; set; }
+    public Vector3 targetCoords { get; set; }
+    public float time { get; set; }
+}
+public class RecordData
+{
+    public int duration { get; set; }
+    public int numberOfAngles { get; set; }
+    public List<int> listOfDistances { get; set; }
+
+    public RecordData(int duration, int numberOfAngles, List<int> listOfDistances)
+    {
+        this.duration = duration;
+        this.numberOfAngles = numberOfAngles;
+        this.listOfDistances = listOfDistances;
+    }
 }
