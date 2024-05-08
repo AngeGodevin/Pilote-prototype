@@ -326,6 +326,7 @@ MonoBehaviour:
   distances: 1e00000028000000320000003c000000
   numberOfAngles: 8
   duration: 60
+  numberOfSize: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -16,9 +16,15 @@ public class Model : MonoBehaviour
     State state;
     public GameObject shape;
     List<GameObject> gameObjects;
+
+
+
     public List<int> distances;
     public int numberOfAngles;
     public int duration;
+    public int numberOfSize;
+
+
     private float currentTime;
     private RecordData recordData;
     private List<UserData> userData;
@@ -52,8 +58,7 @@ public class Model : MonoBehaviour
                 Vector3 vec = Input.mousePosition;
                 if (Input.GetMouseButtonDown(0))
                 {
-           //         UserData u = new UserData { targetId= ,difficultyId=}
-           //             IsTargetHit().ToString());
+                    this.userData.Add(this.isTargetHit());
                     NextTarget();
                 }
                 if (!isTimerRunning())
@@ -94,20 +99,26 @@ public class Model : MonoBehaviour
         {
             for (int j = 0; j < distances.Count; j++)
             {
-                //adapt vector3 coordinates
-                double angle = ConvertDegreesToRadians(i * (360 / numberOfAngles));
-                float x = distances[j];
-                float z = distances[j] * Mathf.Cos(i);
-                float y = distances[j] * Mathf.Sin(i);
+                for (int k = 0; k < numberOfSize; k++)
+                {
+                    //adapt vector3 coordinates
+                    double angle = ConvertDegreesToRadians(i * (360 / numberOfAngles));
+                    float x = distances[j];
+                    float z = distances[j] * Mathf.Cos(i);
+                    float y = distances[j] * Mathf.Sin(i);
 
-                //create the object, and set it inactive
-                GameObject tmp = Instantiate(shape, new Vector3(x, y, z), Quaternion.identity);
-                tmp.SetActive(false);
+                    //create the object, and set it inactive
+                    GameObject tmp = Instantiate(shape, new Vector3(x, y, z), Quaternion.identity);
+                    tmp.SetActive(false);
 
-                //giving object a name, and adding it to the list of objects
-                int name = i * distances.Count + j;
-                tmp.name = name.ToString();
-                gameObjects.Add(tmp);
+                    //Scaling the object to its size
+                    tmp.transform.localScale += new Vector3(k,k,k);
+
+                    //giving object a name, and adding it to the list of objects
+                    int name = i * distances.Count + j + k;
+                    tmp.name = name.ToString();
+                    gameObjects.Add(tmp);
+                }
             }
         }
 
@@ -137,21 +148,23 @@ public class Model : MonoBehaviour
         }
     }
 
-    bool IsTargetHit()
+    UserData isTargetHit()
     {
         RaycastHit hit;
+        bool isTargetHit;
+        Vector3 hitCoord = Vector3.zero;
         Ray rayOrigin = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(rayOrigin, out hit))
         {
-           // Debug.Log(hit.)
-            return true;
+            hitCoord = hit.transform.position;
+            isTargetHit = true;
+        }else
+        {
+            isTargetHit = false;
         }
-        return false;
+        return new UserData { targetId= Int32.Parse(this.gameObjects[0].name) , isTargetHit = isTargetHit, hitCoords= hitCoord  , targetCoords= this.gameObjects[0].transform.position, time=this.currentTime};
     }
-    //calculate ID based on the target
-    void getTargetId()
-    {
-    }
+
 
     //register data to Csv
     void registerData()
@@ -174,10 +187,10 @@ public class Model : MonoBehaviour
         csv.WriteLine("");
 
         //writing the user data
-        csv.WriteLine("TargetId, DifficultyId, IsTargetHit?, HitCoordsX, HitCoordsY, HitCoordsY, HitCoordsZ, TargetCoordsX, TargetCoordsY, TargetCoordsZ, Time");
+        csv.WriteLine("TargetId, IsTargetHit?, HitCoordsX, HitCoordsY, HitCoordsZ, TargetCoordsX, TargetCoordsY, TargetCoordsZ, Time");
         for (int i = 0; i < userData.Count; i++)
         {
-            csv.WriteLine(userData[i].targetId.ToString() + "," + userData[i].difficultyId.ToString() + "," + userData[i].isTargetHit.ToString() + "," + userData[i].hitCoords.x.ToString() + "," + userData[i].hitCoords.y.ToString() + "," + userData[i].hitCoords.z.ToString() + "," + userData[i].targetCoords.x.ToString() + "," + userData[i].targetCoords.y.ToString() + "," + userData[i].targetCoords.z.ToString(), userData[i].time.ToString());
+            csv.WriteLine(userData[i].targetId.ToString() + "," + userData[i].isTargetHit.ToString() + "," + userData[i].hitCoords.x.ToString() + "," + userData[i].hitCoords.y.ToString() + "," + userData[i].hitCoords.z.ToString() + "," + userData[i].targetCoords.x.ToString() + "," + userData[i].targetCoords.y.ToString() + "," + userData[i].targetCoords.z.ToString() + ","+ userData[i].time.ToString());
         }
 
 
@@ -191,7 +204,6 @@ public class Model : MonoBehaviour
 public class UserData
 {
     public int targetId { get; set; }
-    public int difficultyId { get; set; }
     public bool isTargetHit { get; set; }
     public Vector3 hitCoords { get; set; }
     public Vector3 targetCoords { get; set; }
